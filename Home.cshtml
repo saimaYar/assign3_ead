@@ -1,0 +1,218 @@
+﻿
+@{
+    Layout = "~/Views/Shared/_HomeLayout.cshtml";
+}
+
+
+
+@section onLoad{
+    <script>
+        let folder = 0;
+        let previousFolder = [];
+        let bool = true;
+        $(document).ready(function () {
+            $('.modal').modal();
+            var data = new FormData();
+            data.append("userId", @EAD_ASSIGNMENT3.Securtiy.sessionManager.User.id);
+            data.append("parentFolderId", 0)
+            var settings = {
+                type: "POST",
+                url: "@Url.Content("~/Home/GetFolders")",
+                contentType: false,
+                processData: false,
+                data: data,
+                success: function (response) {
+                     let div=document.createElement("div");
+                    for (let count= 0; i < response.folders.length; count++) {
+                        let ele = document.createElement("button");
+                        ele.className="btn";
+                        ele.setAttribute("folderId", response.folders[count].folderId);
+                        ele.innerText = response.folders[count].folderName;
+                        div.appendChild(ele);
+                    }
+                    $(".flex-container").append(div);
+                },
+                error: function (error) {
+                    alert("error occured");
+                }
+            };
+            $.ajax(settings);
+        });
+    </script>
+}
+
+@section borders{
+    <script>
+        $(document).ready(function () {
+            $(".flex-container").on("click", ".btn", function () {
+                if (bool) {
+                    $(this).closest(".flex-container").find(".current").css("border", "0px");
+                    $(this).css("border", "2px black solid").addClass("current");
+                    bool = false;
+                }
+                else {
+                    $(this).css("border", "0px")
+                    bool = true;
+                }
+            })
+        })
+    </script>
+}
+
+@section modalToggle{
+    <script>
+        $(document).ready(function () {
+            $('.modal').modal({
+                onCloseEnd() {
+                    $("#childId").val("");
+                }
+            });
+        });
+    </script>
+}
+
+@section createFolders{
+    <script>
+        $(document).ready(function () {
+            $("#createbtn").on("click", function () {
+                let child = $("#childId").val();
+                if (child == "") {
+                    let inputMsg = "Please fill the input field!";
+                    $("#ip").text(inputMsg);
+                    setTimeout(() => {
+                        $("#ip").html("");
+                    }, 2000);
+                    return false;
+                }
+                else {
+                     $(".btnClose").click();
+                }
+                var data = new FormData();
+                data.append("child", child);
+                data.append("uid",@EAD_ASSIGNMENT3.Securtiy.sessionManager.User.id);
+                data.append("parentFolder", folder);
+                var settings = {
+                    type: "POST",
+                    url: "@Url.Content("~/Home/CreateFolders")",
+                    contentType: false,
+                    processData: false,
+                    data: data,
+                    success: function (response) {
+                        if (response.success) {
+                            let ele = document.createElement("button");
+                            ele.className = "btn";
+                            ele.innerText = child;
+                            $(".flex-container div").append(ele);
+                            ele.setAttribute("folderId", response.folderId);
+                            $("#p1").css("color", "red");
+                            $("#p1").text("Folder Created Successfully!");
+                                    setTimeout(() => {
+                                        const element = $("#p1").text("");
+                                     }, 2000);
+                        }
+                        else {
+                            $("#p1").css("color", "yellow");
+                           $("#p1").text("Folder Already Exists!");
+                                    setTimeout(() => {
+                                        const elem = $("#p1").text("");
+                                     }, 2000);
+                        }
+
+                    },
+                    error: function (e) {
+                        console.log(e);
+                    }
+                };
+                $.ajax(settings);
+            });
+        });
+    </script>
+
+}
+
+@section doubleClick{
+    <script>
+        $(document).ready(function () {
+          
+            $(".flex-container").on("dblclick", ".btn", function () {
+                  var data = new FormData();
+                let id = $(this).attr("folderId");
+                previousFolder.push(folder);
+                folder = id;
+                 data.append("uid", @EAD_ASSIGNMENT3.Securtiy.sessionManager.User.id);
+                data.append("parentFolderId", folder);
+                var settings = {
+                    type: "POST",
+                    url: "@Url.Content("~/Home/GetFolders")",
+                    contentType: false,
+                    processData: false,
+                    data: data,
+                    success: function (response) {
+                      
+                        let div = document.createElement("div");
+                        for (let count = 0; i < response.folders.length; count++) {
+                            let ele = document.createElement("button");
+                            ele.className = "btn";
+                            ele.setAttribute("folderId", response.folders[i].folderId);
+                            ele.innerText = response.folders[i].folderName;
+                            div.appendChild(ele);
+                        }
+                        $(".flex-container").append(div);
+                        $(".flex-container").children().not(':last').remove();
+                    },
+                    error: function (e) {
+                        alert("error");
+                    }
+                };
+                $.ajax(settings);
+
+            });
+        });
+    </script>
+    }
+
+@section back{
+   <script>
+       $(document).ready(function () {
+           $("#backBtn").on("click", function () {
+               if (previousFolder.length > 0) {
+                   
+                   let folderId = previousFolder.pop();
+                   folder = folderId;
+                   var data = new FormData();
+                   data.append("uid", @EAD_ASSIGNMENT3.Securtiy.sessionManager.User.id);
+                   data.append("parentFolderId", folder);
+                   var settings = {
+                       type: "POST",
+                       url: "@Url.Content("~/Home/GetFolders")",
+                       contentType: false,
+                       processData: false,
+                       data: data,
+                       success: function (response) {
+
+                           let div = document.createElement("div");
+                           for (let count = 0; count < response.folders.length; count++) {
+                               let ele = document.createElement("button");
+                               ele.className = "btn";
+                               ele.setAttribute("folderId", response.folders[count].folderId);
+                               ele.innerText = response.folders[count].folderName;
+                               div.appendChild(ele);
+                           }
+                           $(".flex-container").append(div);
+                           $(".flex-container").children().not(':last').remove();
+                       },
+                       error: function (e) {
+                           alert("error");
+                       }
+                   };
+                   $.ajax(settings);
+               }
+               else {
+                   return false;
+               }
+           });
+       });
+    </script>
+    
+    }
+
